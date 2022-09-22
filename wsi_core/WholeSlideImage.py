@@ -163,7 +163,25 @@ class WholeSlideImage(object):
         filter_params = filter_params.copy()
         filter_params['a_t'] = filter_params['a_t'] * scaled_ref_patch_area
         filter_params['a_h'] = filter_params['a_h'] * scaled_ref_patch_area
+       
+
+        ################
+        # start added code
+        ################
+
+        # Erode the segmentation mask so that we don't look at tissue edges
         
+        # Creating kernel
+        #kernel = np.ones((55, 55), np.uint8)
+          
+        # Using cv2.erode() method 
+        #img_otsu = cv2.erode(img_otsu, kernel) 
+
+
+        ################
+        # End added code
+        ################
+
         # Find and filter contours
         contours, hierarchy = cv2.findContours(img_otsu, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE) # Find contours 
         hierarchy = np.squeeze(hierarchy, axis=(0,))[:, 2:]

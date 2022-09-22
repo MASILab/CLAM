@@ -6,6 +6,7 @@ from wsi_core.util_classes import Mosaic_Canvas
 from PIL import Image
 import math
 import cv2
+from gca_he import utils
 
 def isWhitePatch(patch, satThresh=5):
     patch_hsv = cv2.cvtColor(patch, cv2.COLOR_RGB2HSV)
@@ -204,11 +205,26 @@ def DrawMapFromCoords(canvas, wsi_object, coords, patch_size, vis_level, indices
         patch_id = indices[idx]
         coord = coords[patch_id]
         patch = np.array(wsi_object.wsi.read_region(tuple(coord), vis_level, patch_size).convert("RGB"))
-        coord = np.ceil(coord / downsamples).astype(np.int32)
-        canvas_crop_shape = canvas[coord[1]:coord[1]+patch_size[1], coord[0]:coord[0]+patch_size[0], :3].shape[:2]
-        canvas[coord[1]:coord[1]+patch_size[1], coord[0]:coord[0]+patch_size[0], :3] = patch[:canvas_crop_shape[0], :canvas_crop_shape[1], :]
-        if draw_grid:
-            DrawGrid(canvas, coord, patch_size)
+
+        ##############################
+        patch_mask = utils.otsu(patch)
+        flat_patch_mask = patch_mask.flatten()
+
+        num_background_pixels = len(flat_patch_mask[flat_patch_mask == 0])
+
+        if num_background_pixels / len(flat_patch_mask) < 0.5:
+        ###########################
+            coord = np.ceil(coord / downsamples).astype(np.int32)
+            canvas_crop_shape = canvas[coord[1]:coord[1]+patch_size[1], coord[0]:coord[0]+patch_size[0], :3].shape[:2]
+            canvas[coord[1]:coord[1]+patch_size[1], coord[0]:coord[0]+patch_size[0], :3] = patch[:canvas_crop_shape[0], :canvas_crop_shape[1], :]
+            if draw_grid:
+                DrawGrid(canvas, coord, patch_size)
+
+        # coord = np.ceil(coord / downsamples).astype(np.int32)
+        # canvas_crop_shape = canvas[coord[1]:coord[1]+patch_size[1], coord[0]:coord[0]+patch_size[0], :3].shape[:2]
+        # canvas[coord[1]:coord[1]+patch_size[1], coord[0]:coord[0]+patch_size[0], :3] = patch[:canvas_crop_shape[0], :canvas_crop_shape[1], :]
+        # if draw_grid:
+        #     DrawGrid(canvas, coord, patch_size)
 
     return Image.fromarray(canvas)
 
