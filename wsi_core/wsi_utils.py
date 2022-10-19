@@ -7,6 +7,7 @@ from PIL import Image
 import math
 import cv2
 from gca_he import utils
+import scipy
 
 def isWhitePatch(patch, satThresh=5):
     patch_hsv = cv2.cvtColor(patch, cv2.COLOR_RGB2HSV)
@@ -208,11 +209,18 @@ def DrawMapFromCoords(canvas, wsi_object, coords, patch_size, vis_level, indices
 
         ##############################
         patch_mask = utils.otsu(patch)
+        patch_mask = scipy.ndimage.binary_dilation(patch_mask, iterations=10)
+        patch_mask = scipy.ndimage.morphology.binary_fill_holes(patch_mask).astype(np.uint8)
+        patch_mask = scipy.ndimage.binary_dilation(patch_mask, iterations=10)
+
         flat_patch_mask = patch_mask.flatten()
+
+
+
 
         num_background_pixels = len(flat_patch_mask[flat_patch_mask == 0])
 
-        if num_background_pixels / len(flat_patch_mask) < 0.5:
+        if num_background_pixels / len(flat_patch_mask) < 0.05:
         ###########################
             coord = np.ceil(coord / downsamples).astype(np.int32)
             canvas_crop_shape = canvas[coord[1]:coord[1]+patch_size[1], coord[0]:coord[0]+patch_size[0], :3].shape[:2]
